@@ -385,6 +385,135 @@ void U8x8Display::drawQS(uint16_t x, uint16_t y, uint8_t len, uint8_t /*size*/, 
 	}
 }
 
+void U8G2Display::begin() {
+	u8x8_setSpiPtr(new SPIClass(HSPI));
+	LOG_I(TAG, "Init LS027B7DH01 display scl=%d sda=%d rst=%d\n", sonde.config.oled_scl, sonde.config.oled_sda, sonde.config.oled_rst);
+	u8g2 = new U8G2_LS027B7DH01_400X240_F_4W_HW_SPI(U8G2_R0, /* cs=*/ 15, /* dc=*/ U8X8_PIN_NONE);
+
+	LOG_D(TAG, "calling begin...\n");
+	u8g2->begin();
+	u8g2->setDrawColor(0);
+	if(sonde.config.tft_orient==3) u8g2->setFlipMode(true);
+	if(sonde.config.dispcontrast>=0) u8g2->setContrast(sonde.config.dispcontrast);
+	LOG_D(TAG, "setup finishing...\n");
+
+	fontlist = fl;
+	nfonts = sizeof(fl)/sizeof(uint8_t *);
+	LOG_I(TAG, "Size of font list is %d\n", nfonts);
+}
+
+void U8G2Display::clear() {
+	u8g2->setDrawColor(1);
+	u8g2->drawBox(0, 0, 400, 245);
+	update();
+	u8g2->setDrawColor(0);
+}
+
+void U8G2Display::setContrast(uint8_t contrast) {
+	u8g2->setContrast(contrast);
+}
+
+
+// For u8x8 oled display: 0=small font, 1=large font 7x14
+void U8G2Display::setFont(uint8_t fontindex) {
+	if(fontindex==FONT_SMALL)
+	{
+		u8g2->setFont(u8g2_font_profont22_tr);
+	}
+	else
+	{
+		u8g2->setFont(u8g2_font_profont29_tr);
+	}
+}
+
+void U8G2Display::getDispSize(uint8_t *height, uint8_t *width, uint8_t *lineskip, uint8_t *colskip) {
+	// TODO: maybe we should decided depending on font size (single/double?)
+	if(height) *height = 8;
+	if(width) *width = 16;
+	if(lineskip) *lineskip = 1;
+	if(colskip) *colskip = 1;
+}
+
+void U8G2Display::drawString(uint16_t x, uint16_t y, const char *s, int16_t width, uint16_t fg, uint16_t bg) {
+	char buf[50];
+	utf2latin15(s, buf, 50);
+	if(width!=WIDTH_AUTO && width>0) {
+		for(int l = strlen(buf); l<width; l++) {
+			buf[l] = ' ';
+		}
+		buf[width] = 0;
+	}
+	if(width<0) {
+		int l = strlen(buf);
+		memset(buf, ' ', -width-l);
+		utf2latin15(s, buf+l, 50-l);
+	}
+	u8g2->drawStr(x*10, (1+y)*25, buf);
+	update();
+}
+
+void U8G2Display::drawTile(uint16_t x, uint16_t y, uint8_t cnt, uint8_t *tile_ptr) {
+	u8g2->drawTile(x, y, cnt, tile_ptr);
+}
+
+void U8G2Display::drawBitmap(uint16_t x1, uint16_t y1, const uint16_t* bitmap, int16_t w, int16_t h) {
+	// not supported
+}
+void U8G2Display::drawTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color, bool fill) {
+	// not supported (yet)
+}
+
+void U8G2Display::welcome() {
+	clear();
+	setFont(FONT_LARGE);
+	drawString(8 - strlen(version_name) / 2, 0, version_name);
+	drawString(8 - strlen(version_id) / 2, 2, version_id);
+	setFont(FONT_SMALL);
+	drawString(0, 4, "RS41/92,DFM,Mx0");
+	drawString(0, 6, "by Hansi, DL9RDZ");
+}
+
+void U8G2Display::update() {
+	SPI_MUTEX_LOCK();
+	u8g2->sendBuffer();
+	SPI_MUTEX_UNLOCK();
+}
+
+void U8G2Display::drawIP(uint16_t x, uint16_t y, int16_t width, uint16_t fg, uint16_t bg) {
+	if(!previp.equals(sonde.ipaddr)) {
+		// ip address has changed
+		// create tiles
+		memset(myIP_tiles, 0, 11*8);
+		int len = sonde.ipaddr.length();
+		const char *ip = sonde.ipaddr.c_str();
+		int pix = (len-3)*6+6;
+		int tp = 80-pix+8;
+		if(sonde.isAP) memcpy(myIP_tiles+(tp<16?0:8), ap_tile, 8);
+		for(int i=0; i<len; i++) {
+			if(ip[i]=='.') { myIP_tiles[tp++]=0x40; myIP_tiles[tp++]=0x00; }
+			else {
+				int idx = ip[i]-'0';
+				memcpy(myIP_tiles+tp, &font[idx], 5);
+				myIP_tiles[tp+5] = 0;
+				tp+=6;
+			}
+		}
+		while(tp<8*10) { myIP_tiles[tp++]=0; }
+		previp = sonde.ipaddr;
+	}
+	// draw tiles
+	u8g2->drawTile(x, y, 11, myIP_tiles);
+}
+
+// len must be multiple of 2, size is fixed for u8x8 display
+void U8G2Display::drawQS(uint16_t x, uint16_t y, uint8_t len, uint8_t /*size*/, uint8_t *stat, uint16_t fg, uint16_t bg) {
+	for(int i=0; i<len; i+=2) {
+		uint8_t tile[8];
+		*(uint32_t *)(&tile[0]) = *(uint32_t *)(&(stattiles[stat[i]]));
+		*(uint32_t *)(&tile[4]) = *(uint32_t *)(&(stattiles[stat[i+1]]));
+		drawTile(x+i/2, y, 1, tile);
+	}
+}
 
 #if LEGACY_FONTS_IN_CODEBIN
 const GFXfont *legacygfl[] = {
@@ -795,6 +924,8 @@ void Display::init() {
 	LOG_I(TAG, "init: disptype is %d\n",sonde.config.disptype);
 	if(sonde.config.disptype==0 || sonde.config.disptype==2) {
 		rdis = new U8x8Display(sonde.config.disptype);
+	} else if (sonde.config.disptype==6) {
+		rdis = new U8G2Display(sonde.config.disptype);
 	} else {
 		rdis = new ILI9225Display(sonde.config.disptype);
 	}
@@ -1050,7 +1181,7 @@ int Display::getScreenIndex(int index) {
 			index = 4;      // landscape mode (orient=1/3)
 			if( (sonde.config.tft_orient&0x01)==0 ) index++;   // portrait mode (0/2)
 			break;
-		case 0: case 2: 	// small OLED display (SD1306/SH1106)
+		case 0: case 2: case 6:	// small OLED display (SD1306/SH1106) and sharp memory display
 		default:
 			index = 1; break;
 	}
@@ -1168,7 +1299,7 @@ void Display::initFromFile(int index) {
 					char text[61];
 					n=sscanf(s, "%f,%f,%f", &y, &x, &w);
 					sscanf(ptr+1, "%60[^\r\n]", text);
-					if(sonde.config.disptype!=0 && sonde.config.disptype!=2) {
+					if(sonde.config.disptype!=0 && sonde.config.disptype!=2 && sonde.config.disptype!=6) {
 						x*=xscale; y*=yscale; w*=xscale;
 					}
 					newlayouts[idx].de[what].x = x;

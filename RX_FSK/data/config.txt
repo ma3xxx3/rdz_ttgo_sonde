@@ -18,7 +18,7 @@
 # No specification in config file: try autodetection (gpio4 pin level at startup)
 #
 # disptype: 0=OLED, 1=ILI9225
-#disptype=0
+disptype=6
 #oled_sda=21
 #oled_scl=22
 #oled_rst=16
@@ -39,7 +39,7 @@ tft_orient=1
 #-------------------------------#
 maxsonde=20
 # debug: 0=err, 1=warn, 2=info, 3=debug; +10:use color
-debug=12
+debug=13
 # wifi mode: 1=client in background; 2=AP in background; 3=client on startup, ap if failure
 wifi=3
 # TCP/IP KISS TNC in port 14590 for APRSdroid (0=disabled, 1=enabled)

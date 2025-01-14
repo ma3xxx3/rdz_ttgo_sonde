@@ -72,7 +72,7 @@ void Scanner::fillTiles(uint8_t *row, int value) {
 ///// unused????  uint8_t tiles[16] = { 0x0f,0x0f,0x0f,0x0f,0xf0,0xf0,0xf0,0xf0, 1, 3, 7, 15, 31, 63, 127, 255};
 
 // type 0: lcd, 1: tft(ILI9225), 2: lcd(sh1106) 3:TFT(ili9341), 4: TFT(ili9342)
-#define ISTFT (sonde.config.disptype!=0 && sonde.config.disptype!=2)
+#define ISTFT (sonde.config.disptype!=0 && sonde.config.disptype!=2 && sonde.config.disptype!=6)
 void Scanner::plotResult()
 {
 	int yofs = 0;

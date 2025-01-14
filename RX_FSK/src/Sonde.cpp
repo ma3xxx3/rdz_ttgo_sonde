@@ -222,7 +222,7 @@ void Sonde::defaultConfig() {
 					config.sx1278_sck = 18; // SCK;
 				} else { // some t-beam...
 					config.button_pin = 38;
-					config.button2_pin = 15 + 128; //T4 + 128;  // T4 = GPIO13
+					config.button2_pin = 255; //T4 + 128;  // T4 = GPIO13
 					// Maybe in future use as default only PWR as button2?
 					//config.button2_pin = 255;
 					config.button2_axp = 1;

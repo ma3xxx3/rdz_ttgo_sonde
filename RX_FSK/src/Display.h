@@ -88,6 +88,30 @@ public:
         void drawQS(uint16_t x, uint16_t y, uint8_t len, uint8_t size, uint8_t *stat, uint16_t fg=0xffff, uint16_t bg=0);
 };
 
+class U8G2Display : public RawDisplay {
+private:
+	U8G2 *u8g2 = NULL;
+	uint8_t _type;
+	const uint8_t **fontlist;
+	int nfonts;
+
+public:
+	U8G2Display(uint8_t  type = 0) { _type = type; }
+	void begin();
+	void clear();
+	void setContrast(uint8_t contrast);
+	void setFont(uint8_t fontindex);
+	void getDispSize(uint8_t *height, uint8_t *width, uint8_t *lineskip, uint8_t *colskip);
+        void drawString(uint16_t x, uint16_t y, const char *s, int16_t width=WIDTH_AUTO, uint16_t fg=0xffff, uint16_t bg=0);
+        void drawTile(uint16_t x, uint16_t y, uint8_t cnt, uint8_t *tile_ptr);
+	void drawTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color, bool fill);
+        void drawBitmap(uint16_t x1, uint16_t y1, const uint16_t* bitmap, int16_t w, int16_t h);
+	void welcome();
+	void drawIP(uint16_t x, uint16_t y, int16_t width=WIDTH_AUTO, uint16_t fg=0xffff, uint16_t bg=0);
+        void drawQS(uint16_t x, uint16_t y, uint8_t len, uint8_t size, uint8_t *stat, uint16_t fg=0xffff, uint16_t bg=0);
+	void update();
+};
+
 typedef Arduino_GFX MY_ILI9225;
 
 class ILI9225Display : public RawDisplay {
