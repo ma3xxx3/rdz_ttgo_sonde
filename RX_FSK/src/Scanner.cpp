@@ -25,7 +25,7 @@ struct scancfg {
 };
 
 //struct scancfg scanLCD={ 121, 7,  120/6, 120/6/4, 6000.0/120.0/20.0, 20, 120*20, 1 };
-struct scancfg scanLCD={ 121, 7,  120/6, 120/6/4, 6000.0/120.0/10.0, 10, 120*10, 2, 40, 1 };
+struct scancfg scanLCD={ 300, 20,  300/6, 300/6/5, 6000.0/300.0/10.0, 10, 300*10, 2, 40, 1 };
 struct scancfg scanTFT={ 210, 16, 210/6, 210/6/5, 6000.0/210.0/10.0, 10, 210*10, 1, 0, 1 };
 struct scancfg scan934x={ 300, 22, 300/6, 300/6/5, 6000.0/300.0/7.0, 7, 300*5, 1, 10, 2 };
 
@@ -42,7 +42,7 @@ struct scancfg &scanconfig = scanTFT;
 
 // max of 120 and 210 (ceil(210/8)*8)) -- now ceil(300/8)*8
 //#define MAXDISP 216
-#define MAXDISP 304
+#define MAXDISP 300
 
 int scanresult[MAXN];
 int scandisp[MAXDISP];
@@ -77,23 +77,26 @@ void Scanner::plotResult()
 {
 	int yofs = 0;
 	char buf[30];
+
+	disp.rdis->clear();
+
 	if(ISTFT) {
 		yofs = 2;
   		if (sonde.config.marker != 0) {
     			itoa((sonde.config.startfreq), buf, 10);
-    			disp.rdis->drawString(0, 1, buf);
-    			disp.rdis->drawString(scanconfig.PLOT_W/2-10, 1, "MHz");
+    			disp.rdis->drawString(0, 0, buf);
+    			disp.rdis->drawString(scanconfig.PLOT_W/2-10, 0, "MHz");
     			itoa((sonde.config.startfreq + 6), buf, 10);
-    			disp.rdis->drawString(scanconfig.PLOT_W-15, 1, buf);
+    			disp.rdis->drawString(scanconfig.PLOT_W-15, 0, buf);
 		}	
 	}
 	else {
   		if (sonde.config.marker != 0) {
     			itoa((sonde.config.startfreq), buf, 10);
-    			disp.rdis->drawString(0, 1, buf);
-    			disp.rdis->drawString(7, 1, "MHz");
+    			disp.rdis->drawString(HorizontalPosition::LEFT, 0, buf, 1);
+    			disp.rdis->drawString(HorizontalPosition::CENTER, 0, "MHz");
     			itoa((sonde.config.startfreq + 6), buf, 10);
-    			disp.rdis->drawString(13, 1, buf);
+    			disp.rdis->drawString(HorizontalPosition::RIGHT, 0, buf, -1);
 		}	
   	}
 	uint8_t row[scanconfig.PLOT_H8*8];
@@ -101,17 +104,30 @@ void Scanner::plotResult()
 		for(int j=0; j<8; j++) {
 			fillTiles(row+j, PLOT_SCALE(scandisp[i+j]));
 			if( (i+j)>=scanconfig.PLOT_W ) { for(int y=0; y<scanconfig.PLOT_H8; y++) row[j+8*y]=0; }
-		        if( ((i+j)%scanconfig.TICK1)==0) { row[j] |= 0x07; }
-		        if( ((i+j)%scanconfig.TICK2)==0) { row[j] |= 0x01; }
+		        if(i+j==1) { row[j] |= 0xff; }
+				if( ((i+j)%scanconfig.TICK1)==0) { row[j] |= 0xff; }
+				if( ((i+j+1)%scanconfig.TICK1)==0) { row[j] |= 0xff; }
+		        if( ((i+j)%scanconfig.TICK2)==0) { row[j] |= 0x0f; }
+				if( ((i+j+1)%scanconfig.TICK2)==0) { row[j] |= 0x0f; }
 		}
 		for(int y=0; y<scanconfig.PLOT_H8; y++) {
 			if(sonde.config.marker && y==1 && !ISTFT ) {
 				// don't overwrite MHz marker text
 				if(i<3*8 || (i>=7*8&&i<10*8) || i>=13*8) continue;
 			}
-			disp.rdis->drawTile(i/8, y+yofs, 1, row+8*y);
+
+			uint8_t spectrumBitmapTile[8] = {0};
+
+			for(int k=0; k<8; k++) {
+				for (int l=0; l<8; l++) {
+					spectrumBitmapTile[l] |= ((row[8*y+k] & (1 << l))?1:0) << (7-k);
+					//spectrumBitmapTile[((y*8+l)*50) + i/8] |= ((row[8*y+k] & (1 << l))?1:0) << (7-k);
+				}
+			}
+			disp.rdis->drawBitmap(i+50, y*8+40, spectrumBitmapTile, 1, 8);
 		}
 	}
+
 	if(ISTFT) { // large TFT
 		sprintf(buf, "Peak: %03.3f MHz", peakf*0.000001);	
 		disp.rdis->drawString(0, (yofs+scanconfig.PLOT_H8+1)*8, buf);
@@ -119,6 +135,7 @@ void Scanner::plotResult()
 		sprintf(buf, "Peak: %03.3fMHz", peakf*0.000001);	
 		disp.rdis->drawString(0, 7, buf);
 	}
+	disp.rdis->update();
 }
 
 void Scanner::scan()

@@ -11,6 +11,13 @@
 
 #include "posinfo.h"
 
+enum class HorizontalPosition : uint8_t
+{
+	LEFT = 0,
+	CENTER = 1,
+	RIGHT = 2
+};
+
 #define WIDTH_AUTO 9999
 struct DispEntry {
 	int16_t y;
@@ -57,12 +64,17 @@ public:
 	virtual void setFont(uint8_t fontindex) = 0;
 	virtual void getDispSize(uint8_t *height, uint8_t *width, uint8_t *lineskip, uint8_t *colskip) = 0;
 	virtual void drawString(uint16_t x, uint16_t y, const char *s, int16_t width=WIDTH_AUTO, uint16_t fg=0xffff, uint16_t bg=0 ) = 0;
+	virtual void drawString(HorizontalPosition horizontalPosition, uint16_t y, const char *s, uint16_t offset = 0, int16_t width=WIDTH_AUTO, uint16_t fg=0xffff, uint16_t bg=0) = 0;
 	virtual void drawTile(uint16_t x, uint16_t y, uint8_t cnt, uint8_t *tile_ptr) = 0;
 	virtual void drawTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color, bool fill) = 0;
 	virtual void drawBitmap(uint16_t x1, uint16_t y1, const uint16_t* bitmap, int16_t w, int16_t h) = 0;
+	virtual void drawBitmap(uint16_t x1, uint16_t y1, const uint8_t* bitmap, int16_t w, int16_t h) = 0;
 	virtual void welcome() = 0;
 	virtual void drawIP(uint16_t x, uint16_t y, int16_t width=WIDTH_AUTO, uint16_t fg=0xffff, uint16_t bg=0 ) = 0;
 	virtual void drawQS(uint16_t x, uint16_t y, uint8_t len, uint8_t size, uint8_t *stat, uint16_t fg=0xffff, uint16_t bg=0) = 0;
+	virtual void drawRSSI(uint16_t x, uint16_t y, int rssi) = 0;
+	virtual void clearBuffer() = 0;
+	virtual void update() = 0;
 };
 
 class U8x8Display : public RawDisplay {
@@ -80,12 +92,17 @@ public:
 	void setFont(uint8_t fontindex);
 	void getDispSize(uint8_t *height, uint8_t *width, uint8_t *lineskip, uint8_t *colskip);
         void drawString(uint16_t x, uint16_t y, const char *s, int16_t width=WIDTH_AUTO, uint16_t fg=0xffff, uint16_t bg=0);
+		void drawString(HorizontalPosition horizontalPosition, uint16_t y, const char *s, uint16_t offset = 0, int16_t width=WIDTH_AUTO, uint16_t fg=0xffff, uint16_t bg=0);
         void drawTile(uint16_t x, uint16_t y, uint8_t cnt, uint8_t *tile_ptr);
 	void drawTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color, bool fill);
         void drawBitmap(uint16_t x1, uint16_t y1, const uint16_t* bitmap, int16_t w, int16_t h);
+		void drawBitmap(uint16_t x1, uint16_t y1, const uint8_t* bitmap, int16_t w, int16_t h);
 	void welcome();
 	void drawIP(uint16_t x, uint16_t y, int16_t width=WIDTH_AUTO, uint16_t fg=0xffff, uint16_t bg=0);
         void drawQS(uint16_t x, uint16_t y, uint8_t len, uint8_t size, uint8_t *stat, uint16_t fg=0xffff, uint16_t bg=0);
+		void drawRSSI(uint16_t x, uint16_t y, int rssi);
+	void clearBuffer();
+	void update();
 };
 
 class U8G2Display : public RawDisplay {
@@ -95,6 +112,8 @@ private:
 	const uint8_t **fontlist;
 	int nfonts;
 
+	void prepareString(const char *s, int16_t width, char *sOut, size_t sOutLen);
+
 public:
 	U8G2Display(uint8_t  type = 0) { _type = type; }
 	void begin();
@@ -103,12 +122,16 @@ public:
 	void setFont(uint8_t fontindex);
 	void getDispSize(uint8_t *height, uint8_t *width, uint8_t *lineskip, uint8_t *colskip);
         void drawString(uint16_t x, uint16_t y, const char *s, int16_t width=WIDTH_AUTO, uint16_t fg=0xffff, uint16_t bg=0);
+		void drawString(HorizontalPosition horizontalPosition, uint16_t y, const char *s, uint16_t offset = 0, int16_t width=WIDTH_AUTO, uint16_t fg=0xffff, uint16_t bg=0);
         void drawTile(uint16_t x, uint16_t y, uint8_t cnt, uint8_t *tile_ptr);
 	void drawTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color, bool fill);
         void drawBitmap(uint16_t x1, uint16_t y1, const uint16_t* bitmap, int16_t w, int16_t h);
+		void drawBitmap(uint16_t x1, uint16_t y1, const uint8_t* bitmap, int16_t w, int16_t h);
 	void welcome();
 	void drawIP(uint16_t x, uint16_t y, int16_t width=WIDTH_AUTO, uint16_t fg=0xffff, uint16_t bg=0);
         void drawQS(uint16_t x, uint16_t y, uint8_t len, uint8_t size, uint8_t *stat, uint16_t fg=0xffff, uint16_t bg=0);
+		void drawRSSI(uint16_t x, uint16_t y, int rssi);
+	void clearBuffer();
 	void update();
 };
 
@@ -129,12 +152,17 @@ public:
 	void setFont(uint8_t fontindex);
 	void getDispSize(uint8_t *height, uint8_t *width, uint8_t *lineskip, uint8_t *colskip);
         void drawString(uint16_t x, uint16_t y, const char *s, int16_t width=WIDTH_AUTO, uint16_t fg=0xffff, uint16_t bg=0);
+		void drawString(HorizontalPosition horizontalPosition, uint16_t y, const char *s, uint16_t offset = 0, int16_t width=WIDTH_AUTO, uint16_t fg=0xffff, uint16_t bg=0);
         void drawTile(uint16_t x, uint16_t y, uint8_t cnt, uint8_t *tile_ptr);
 	void drawTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color, bool fill);
         void drawBitmap(uint16_t x1, uint16_t y1, const uint16_t* bitmap, int16_t w, int16_t h);
+		void drawBitmap(uint16_t x1, uint16_t y1, const uint8_t* bitmap, int16_t w, int16_t h);
 	void welcome();
 	void drawIP(uint16_t x, uint16_t y, int16_t width=WIDTH_AUTO, uint16_t fg=0xffff, uint16_t bg=0);
         void drawQS(uint16_t x, uint16_t y, uint8_t len, uint8_t size, uint8_t *stat, uint16_t fg=0xffff, uint16_t bg=0);
+		void drawRSSI(uint16_t x, uint16_t y, int rssi);
+	void clearBuffer();
+	void update();
 };
 
 class Display {

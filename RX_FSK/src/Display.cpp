@@ -73,12 +73,32 @@ static unsigned char stattilesXL[5][5] =  {
 	0x7F, 0x49, 0x49, 0x49, 0x00,  // E == decode error
 	0x00, 0x00, 0x00, 0x00, 0x00,   // ' ' == unknown/unassigned
 	0x07, 0x05, 0x07, 0x00, 0x00 };  // ° = rx ok, but no valid position (not yet used?)
-
+static unsigned char stattilesText[5] =  {
+	'|', '.', 'E', ' ', '*'
+};
 
 //static uint8_t halfdb_tile[8]={0x80, 0x27, 0x45, 0x45, 0x45, 0x39, 0x00, 0x00};
 
-static uint8_t halfdb_tile1[8]={0x00, 0x38, 0x28, 0x28, 0x28, 0xC8, 0x00, 0x00};
-static uint8_t halfdb_tile2[8]={0x00, 0x11, 0x02, 0x02, 0x02, 0x01, 0x00, 0x00};
+static uint8_t halfdb_tile1[8]={
+	0b00000000,
+	0b00111000,
+	0b00101000,
+	0b00101000,
+	0b00101000,
+	0b11001000,
+	0b00000000,
+	0b00000000
+	};
+static uint8_t halfdb_tile2[8]={
+	0b00000000,
+	0b00010001,
+	0b00000010,
+	0b00000010,
+	0b00000010,
+	0b00000001,
+	0b00000000,
+	0b00000000
+	};
 
 //static uint8_t empty_tile[8]={0x80, 0x3E, 0x51, 0x49, 0x45, 0x3E, 0x00, 0x00};
 
@@ -91,6 +111,42 @@ static uint8_t nogps_tile[8]={0x41, 0x22, 0x14, 0x08, 0x14, 0x22, 0x41, 0x00};
 
 static uint8_t deg_tile[8]={0x00, 0x06,0x09, 0x09, 0x06, 0x00, 0x00, 0x00};
 
+
+static const uint8_t AP_BITMAP[120] = {
+0b00000000, 0b00001111, 0b11110000, 0b00000000,
+0b00000000, 0b01111111, 0b11111110, 0b00000000,
+0b00000000, 0b11111100, 0b00111111, 0b10000000,
+0b00000011, 0b11000000, 0b00000011, 0b11000000,
+0b00000111, 0b00001111, 0b11100000, 0b11100000,
+0b00001110, 0b00111111, 0b11111100, 0b01110000,
+0b00001100, 0b11111100, 0b00111110, 0b00111000,
+0b00011001, 0b11100000, 0b00000111, 0b00011000,
+0b00111001, 0b11000111, 0b11000011, 0b10011100,
+0b00110011, 0b10011111, 0b11110001, 0b10001100,
+0b01110011, 0b00111100, 0b00111000, 0b11001110,
+0b01110111, 0b00110000, 0b00001100, 0b11001110,
+0b01100110, 0b01110001, 0b10001100, 0b01100110,
+0b11100110, 0b01100011, 0b11000110, 0b01100111,
+0b11100110, 0b01100111, 0b11100110, 0b01100111,
+0b11100110, 0b01100111, 0b11100110, 0b01100111,
+0b11100110, 0b01100011, 0b11000110, 0b01100111,
+0b11100110, 0b00110001, 0b10001100, 0b01100111,
+0b01100111, 0b00110001, 0b10001100, 0b11000110,
+0b01100011, 0b00011001, 0b10011000, 0b11000110,
+0b01110001, 0b10000001, 0b10000001, 0b10001110,
+0b00110000, 0b11000001, 0b10000011, 0b00001100,
+0b00011000, 0b01100001, 0b10000110, 0b00011000,
+0b00001000, 0b00010001, 0b10001000, 0b00010000,
+0b00001100, 0b00000001, 0b10000000, 0b00110000,
+0b00000110, 0b00000011, 0b11000000, 0b01100000,
+0b00000001, 0b00000011, 0b11000000, 0b10000000,
+0b00000000, 0b00000011, 0b11000000, 0b00000000,
+0b00000000, 0b00000111, 0b11100000, 0b00000000,
+0b00000000, 0b00001111, 0b11110000, 0b00000000
+};
+
+static const uint8_t GRID_WIDTH = 25;
+static const uint8_t GRID_HEIGHT = 30;
 
 /* Description of display layouts.
  * for each display, the content is described by a DispEntry structure
@@ -327,6 +383,8 @@ void U8x8Display::drawString(uint16_t x, uint16_t y, const char *s, int16_t widt
 	u8x8->drawString(x, y, buf);
 }
 
+void U8x8Display::drawString(HorizontalPosition horizontalPosition, uint16_t y, const char *s, uint16_t offset, int16_t width, uint16_t fg, uint16_t bg) {}
+
 void U8x8Display::drawTile(uint16_t x, uint16_t y, uint8_t cnt, uint8_t *tile_ptr) {
 	u8x8->drawTile(x, y, cnt, tile_ptr);
 }
@@ -334,6 +392,10 @@ void U8x8Display::drawTile(uint16_t x, uint16_t y, uint8_t cnt, uint8_t *tile_pt
 void U8x8Display::drawBitmap(uint16_t x1, uint16_t y1, const uint16_t* bitmap, int16_t w, int16_t h) {
 	// not supported
 }
+
+void U8x8Display::drawBitmap(uint16_t x1, uint16_t y1, const uint8_t* bitmap, int16_t w, int16_t h) {
+}
+
 void U8x8Display::drawTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color, bool fill) {
 	// not supported (yet)
 }
@@ -385,6 +447,18 @@ void U8x8Display::drawQS(uint16_t x, uint16_t y, uint8_t len, uint8_t /*size*/, 
 	}
 }
 
+void U8x8Display::clearBuffer() {
+	// do nothing
+}
+
+void U8x8Display::update() {
+	// do nothing
+}
+
+void U8x8Display::drawRSSI(uint16_t x, uint16_t y, int rssi) {
+	// do nothing
+}
+
 void U8G2Display::begin() {
 	u8x8_setSpiPtr(new SPIClass(HSPI));
 	LOG_I(TAG, "Init LS027B7DH01 display scl=%d sda=%d rst=%d\n", sonde.config.oled_scl, sonde.config.oled_sda, sonde.config.oled_rst);
@@ -402,11 +476,15 @@ void U8G2Display::begin() {
 	LOG_I(TAG, "Size of font list is %d\n", nfonts);
 }
 
-void U8G2Display::clear() {
+void U8G2Display::clearBuffer() {
 	u8g2->setDrawColor(1);
 	u8g2->drawBox(0, 0, 400, 245);
-	update();
 	u8g2->setDrawColor(0);
+}
+
+void U8G2Display::clear() {
+	clearBuffer();
+	//update();
 }
 
 void U8G2Display::setContrast(uint8_t contrast) {
@@ -418,11 +496,11 @@ void U8G2Display::setContrast(uint8_t contrast) {
 void U8G2Display::setFont(uint8_t fontindex) {
 	if(fontindex==FONT_SMALL)
 	{
-		u8g2->setFont(u8g2_font_profont22_tr);
+		u8g2->setFont(u8g2_font_logisoso26_tr);
 	}
 	else
 	{
-		u8g2->setFont(u8g2_font_profont29_tr);
+		u8g2->setFont(u8g2_font_logisoso42_tr);
 	}
 }
 
@@ -434,22 +512,56 @@ void U8G2Display::getDispSize(uint8_t *height, uint8_t *width, uint8_t *lineskip
 	if(colskip) *colskip = 1;
 }
 
-void U8G2Display::drawString(uint16_t x, uint16_t y, const char *s, int16_t width, uint16_t fg, uint16_t bg) {
-	char buf[50];
-	utf2latin15(s, buf, 50);
+#define TOP_OFFSET 2
+
+void U8G2Display::prepareString(const char *s, int16_t width, char *sOut, size_t sOutLen) {
+	utf2latin15(s, sOut, sOutLen);
 	if(width!=WIDTH_AUTO && width>0) {
-		for(int l = strlen(buf); l<width; l++) {
-			buf[l] = ' ';
+		for(int l = strlen(sOut); l<width; l++) {
+			sOut[l] = ' ';
 		}
-		buf[width] = 0;
+		sOut[width] = 0;
 	}
 	if(width<0) {
-		int l = strlen(buf);
-		memset(buf, ' ', -width-l);
-		utf2latin15(s, buf+l, 50-l);
+		int l = strlen(sOut);
+		memset(sOut, ' ', -width-l);
+		utf2latin15(s, sOut+l, sOutLen-l);
 	}
-	u8g2->drawStr(x*10, (1+y)*25, buf);
-	update();
+}
+
+void U8G2Display::drawString(uint16_t x, uint16_t y, const char *s, int16_t width, uint16_t fg, uint16_t bg) {
+	//LOG_D(TAG, "font ascent: %d, font descent: %d\n", u8g2->getAscent(), u8g2->getDescent());
+	//uint8_t topOffset = 0;
+	//if (u8g2->getAscent() <= GRID_HEIGHT) {
+	//	topOffset = GRID_HEIGHT;
+	///} else {
+	//	topOffset = GRID_HEIGHT*2 + u8g2->getDescent();
+	//}
+	char buf[50];
+	prepareString(s, width, buf, 50);
+
+	u8g2->drawStr(x*GRID_WIDTH, y*GRID_HEIGHT + u8g2->getAscent() + TOP_OFFSET, buf);
+}
+
+void U8G2Display::drawString(HorizontalPosition horizontalPosition, uint16_t y, const char *s, uint16_t offset, int16_t width, uint16_t fg, uint16_t bg) {
+	char buf[50];
+	prepareString(s, width, buf, 50);
+
+	uint16_t x = 0;
+
+	switch (horizontalPosition) {
+		case HorizontalPosition::CENTER:
+			x = ((u8g2->getDisplayWidth() - u8g2->getStrWidth(buf))/2) + (offset*GRID_WIDTH);
+			break;
+		case HorizontalPosition::RIGHT:
+			x = u8g2->getDisplayWidth() - u8g2->getStrWidth(buf) + (offset*GRID_WIDTH);
+			break;
+		case HorizontalPosition::LEFT:
+		default:
+			x = (offset*GRID_WIDTH);
+	};
+
+	u8g2->drawStr(x, y*GRID_HEIGHT + u8g2->getAscent() + TOP_OFFSET, buf);
 }
 
 void U8G2Display::drawTile(uint16_t x, uint16_t y, uint8_t cnt, uint8_t *tile_ptr) {
@@ -457,8 +569,13 @@ void U8G2Display::drawTile(uint16_t x, uint16_t y, uint8_t cnt, uint8_t *tile_pt
 }
 
 void U8G2Display::drawBitmap(uint16_t x1, uint16_t y1, const uint16_t* bitmap, int16_t w, int16_t h) {
-	// not supported
+	u8g2->drawBitmap(x1*GRID_WIDTH, y1*GRID_HEIGHT, w, h, (uint8_t*)bitmap);
 }
+
+void U8G2Display::drawBitmap(uint16_t x1, uint16_t y1, const uint8_t* bitmap, int16_t w, int16_t h) {
+	u8g2->drawBitmap(x1, y1, w, h, bitmap);
+}
+
 void U8G2Display::drawTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color, bool fill) {
 	// not supported (yet)
 }
@@ -466,11 +583,12 @@ void U8G2Display::drawTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y
 void U8G2Display::welcome() {
 	clear();
 	setFont(FONT_LARGE);
-	drawString(8 - strlen(version_name) / 2, 0, version_name);
-	drawString(8 - strlen(version_id) / 2, 2, version_id);
+	drawString(HorizontalPosition::CENTER, 0, version_name);
+	drawString(HorizontalPosition::CENTER, 2, version_id);
 	setFont(FONT_SMALL);
 	drawString(0, 4, "RS41/92,DFM,Mx0");
 	drawString(0, 6, "by Hansi, DL9RDZ");
+	update();
 }
 
 void U8G2Display::update() {
@@ -480,39 +598,38 @@ void U8G2Display::update() {
 }
 
 void U8G2Display::drawIP(uint16_t x, uint16_t y, int16_t width, uint16_t fg, uint16_t bg) {
-	if(!previp.equals(sonde.ipaddr)) {
-		// ip address has changed
-		// create tiles
-		memset(myIP_tiles, 0, 11*8);
-		int len = sonde.ipaddr.length();
-		const char *ip = sonde.ipaddr.c_str();
-		int pix = (len-3)*6+6;
-		int tp = 80-pix+8;
-		if(sonde.isAP) memcpy(myIP_tiles+(tp<16?0:8), ap_tile, 8);
-		for(int i=0; i<len; i++) {
-			if(ip[i]=='.') { myIP_tiles[tp++]=0x40; myIP_tiles[tp++]=0x00; }
-			else {
-				int idx = ip[i]-'0';
-				memcpy(myIP_tiles+tp, &font[idx], 5);
-				myIP_tiles[tp+5] = 0;
-				tp+=6;
-			}
-		}
-		while(tp<8*10) { myIP_tiles[tp++]=0; }
-		previp = sonde.ipaddr;
+	if(sonde.isAP) {
+		u8g2->drawBitmap(x*GRID_WIDTH, y*GRID_HEIGHT, 4, 30, AP_BITMAP);
 	}
-	// draw tiles
-	u8g2->drawTile(x, y, 11, myIP_tiles);
+
+	setFont(FONT_SMALL);
+	drawString(x+2, y, sonde.ipaddr.c_str());
 }
 
 // len must be multiple of 2, size is fixed for u8x8 display
 void U8G2Display::drawQS(uint16_t x, uint16_t y, uint8_t len, uint8_t /*size*/, uint8_t *stat, uint16_t fg, uint16_t bg) {
-	for(int i=0; i<len; i+=2) {
+	setFont(FONT_SMALL);
+
+	char buf[2] = {0, 0};
+
+	for(int i=0; i<len; i++) {
 		uint8_t tile[8];
-		*(uint32_t *)(&tile[0]) = *(uint32_t *)(&(stattiles[stat[i]]));
-		*(uint32_t *)(&tile[4]) = *(uint32_t *)(&(stattiles[stat[i+1]]));
-		drawTile(x+i/2, y, 1, tile);
+		buf[0] = stattilesText[stat[i]];
+		u8g2->drawStr(x*GRID_WIDTH + i*12, (y+1)*GRID_HEIGHT, buf);
+		//drawTile(x+i/2, y, 1, tile);
 	}
+
+}
+
+void U8G2Display::drawRSSI(uint16_t x, uint16_t y, int rssi) {
+	char buf[10];
+	snprintf(buf, 9, "-%d.", sonde.si()->rssi/2);
+	int pixelLen = u8g2->getStrWidth(buf);
+	drawString(x, y, buf);
+
+	snprintf(buf, 9, "%c", (sonde.si()->rssi&1)?'5':'0');
+	setFont(FONT_SMALL);
+	u8g2->drawStr(x*GRID_WIDTH + pixelLen - 13, (y+1)*GRID_HEIGHT, buf);
 }
 
 #if LEGACY_FONTS_IN_CODEBIN
@@ -830,6 +947,9 @@ void ILI9225Display::drawString(uint16_t x, uint16_t y, const char *s, int16_t w
 	SPI_MUTEX_UNLOCK();
 }
 
+void ILI9225Display::drawString(HorizontalPosition horizontalPosition, uint16_t y, const char *s, uint16_t offset, int16_t width, uint16_t fg, uint16_t bg) {}
+
+
 void ILI9225Display::drawTile(uint16_t x, uint16_t y, uint8_t cnt, uint8_t *tile_ptr) {
 	int i,j;
 	SPI_MUTEX_LOCK();
@@ -858,6 +978,9 @@ void ILI9225Display::drawBitmap(uint16_t x1, uint16_t y1, const uint16_t* bitmap
 	SPI_MUTEX_LOCK();
 	tft->draw16bitRGBBitmap(x1, y1, bitmap, w, h);
 	SPI_MUTEX_UNLOCK();
+}
+
+void ILI9225Display::drawBitmap(uint16_t x1, uint16_t y1, const uint8_t* bitmap, int16_t w, int16_t h) {
 }
 
 void ILI9225Display::welcome() {
@@ -905,6 +1028,18 @@ void ILI9225Display::drawQS(uint16_t x, uint16_t y, uint8_t len, uint8_t size, u
 		}
 	}
 	drawBitmap(x, y, bitmap, len*(size+1), (size+3));
+}
+
+void ILI9225Display::clearBuffer() {
+	// do nothing
+}
+
+void ILI9225Display::update() {
+	// do nothing
+}
+
+void ILI9225Display::drawRSSI(uint16_t x, uint16_t y, int rssi) {
+	// do nothing
 }
 
 #include <pgmspace.h>
@@ -1455,7 +1590,9 @@ void Display::drawID(DispEntry *de) {
 void Display::drawRSSI(DispEntry *de) {
 	rdis->setFont(de->fmt);
 	// TODO.... 3/4!!!!!
-	if(sonde.config.disptype!=1) {
+	if(sonde.config.disptype==6) {
+		rdis->drawRSSI(de->x, de->y, sonde.si()->rssi);
+	} else if(sonde.config.disptype!=1) {
 		snprintf(buf, 16, "-%d   ", sonde.si()->rssi/2);
 		int len=strlen(buf)-3;
 		LOG_D(TAG, "drawRSSI: %d %d %d (%d)[%d]\n", de->y, de->x, sonde.si()->rssi/2, sonde.currentSonde, len);
@@ -1702,7 +1839,8 @@ void Display::drawGPS(DispEntry *de) {
 				snprintf(buf, 16, "%.2f%s", speed, de->extra+2);
 				drawString(de, buf);
 				if(!de->extra[2]) {
-					rdis->drawTile(de->x+5, de->y, 2, de->extra[1]=='m' ? ms_tiles : kmh_tiles);
+					snprintf(buf, 16, de->extra[1]=='m' ? "m/s" : "km/h", speed, de->extra+2);
+					rdis->drawString(de->x+5, de->y, buf);
 				}
 			}
 			break;
@@ -1966,11 +2104,17 @@ void Display::drawGPS(DispEntry *de) {
 	}
 
 	void Display::updateDisplay() {
+		//LOG_D(TAG, "updateDisplay\n");
 		if( dispstate == 0 ) return; // do not display anything
 		calcGPS();
+		rdis->clearBuffer();
+		//LOG_D(TAG, "Start drawing layout\n");
 		for(DispEntry *di=layout->de; di->func != NULL; di++) {
+			//LOG_D(TAG, "di: %d\n", di);
 			di->func(di);
 		}
+		//LOG_D(TAG, "Finish drawing layout\n");
+		rdis->update();
 	}
 
 	// Called when key is pressed or new RX starts

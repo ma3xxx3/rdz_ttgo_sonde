@@ -2447,6 +2447,7 @@ void loopSpectrum() {
     }
     snprintf(buf, 10, "%d Sec.", remaining);
     disp.rdis->drawString(0, dispys <= 1 ? (1 + marker) : (dispys + 1)*marker, buf);
+    disp.rdis->update();
     if (remaining <= 0) {
       setCurrentDisplay(0);
       enterMode(ST_DECODER);
@@ -2458,6 +2459,7 @@ void startSpectrumDisplay() {
   sonde.clearDisplay();
   disp.rdis->setFont(FONT_SMALL);
   disp.rdis->drawString(0, 0, "Spectrum Scan...");
+  disp.rdis->update();
   delay(500);
   enterMode(ST_SPECTRUM);
 }
@@ -2793,6 +2795,7 @@ void loopTouchCalib() {
     disp.rdis->drawString(0, 6 * dispys, "Touch2: ");
     snprintf(num, 10, "%d  ", t2);
     disp.rdis->drawString(8 * dispxs, 6 * dispys, num);
+    disp.rdis->update();
     delay(300);
   }
 }
@@ -2834,16 +2837,19 @@ void loopWifiScan() {
     // Mode STN/DIRECT[4]: Connect directly (supports hidden AP)
     {
       disp.rdis->drawString(0, 0, "WiFi Connect...");
+      disp.rdis->update();
       const char *ssid = fetchWifiSSID(1);
       WiFi.mode(WIFI_STA);
       WiFi.begin( ssid, fetchWifiPw(1) );
       disp.rdis->drawString(0, dispys * 2, ssid);
+      disp.rdis->update();
     }
     break;
   case 1:  // STATION mode (continue in BG if no connection)
   case 3:  // old AUTO mode (change to AP if no connection)
     // Mode STATION[1] or SETUP[3]: Scan for networks;
     disp.rdis->drawString(0, 0, "WiFi Scan...");
+    disp.rdis->update();
     int line = 0;
     int index = -1;
     WiFi.mode(WIFI_STA);
@@ -2851,7 +2857,12 @@ void loopWifiScan() {
     for (int i = 0; i < n; i++) {
       String ssid = WiFi.SSID(i);
       disp.rdis->drawString(0, dispys * (1 + line), ssid.c_str(), dwidth);
+      disp.rdis->update();
       line = (line + 1) % (disph / dispys);
+      if (line == 0) {
+        disp.rdis->clear();
+        disp.rdis->drawString(0, 0, "WiFi Scan...");
+      }
       String mac = WiFi.BSSIDstr(i);
       const char *encryptionTypeDescription = translateEncryptionType(WiFi.encryptionType(i));
       LOG_I(TAG, "Network %s: RSSI %d, MAC %s, enc: %s\n", ssid.c_str(), WiFi.RSSI(i), mac.c_str(), encryptionTypeDescription);
@@ -2867,6 +2878,7 @@ void loopWifiScan() {
 
       disp.rdis->drawString(0, lastl, "Conn:");
       disp.rdis->drawString(6 * dispxs, lastl, fetchWifiSSID(index));
+      disp.rdis->update();
       // TODO: wifi_state is used inconsistently
       wifi_state = WIFI_CONNECT;
       WiFi.begin(fetchWifiSSID(index), fetchWifiPw(index));
@@ -2878,6 +2890,7 @@ void loopWifiScan() {
     delay(500);
     Serial.print(".");
     disp.rdis->drawString(15 * dispxs, lastl + dispys, _scan[cnt & 1]);
+    disp.rdis->update();
     cnt++;
     handlePMUirq();    // Needed to react to PMU chip button
     abort = (getKeyPressEvent() != EVT_NONE);
@@ -2915,8 +2928,9 @@ void loopWifiScan() {
     IPAddress myIP = WiFi.softAPIP();
     Serial.print("AP IP address: ");
     Serial.println(myIP);
-    disp.rdis->drawString(0, lastl, "AP:             ");
-    disp.rdis->drawString(6 * dispxs, lastl + 1, networks[0].id.c_str());
+    disp.rdis->drawString(0, lastl, "AP:");
+    disp.rdis->drawString(6 * dispxs, lastl, networks[0].id.c_str());
+    disp.rdis->update();
     enableNetwork(true);
     delay(3000);
   }
@@ -2952,6 +2966,7 @@ void execOTA() {
     dispys = 20;
     disp.rdis->drawString(0, 0, updateHost);
   }
+  disp.rdis->update();
 
   // Connect to Update host
   if (!client.connect(updateHost, updatePort)) {
@@ -2962,6 +2977,7 @@ void execOTA() {
   // First, try update file system
   LOG_I(TAG, "Fetching fs update from '%s:%d' '%s' '%s'\n", updateHost, updatePort, updatePrefix, updateFs);
   disp.rdis->drawString(0, 1 * dispys, "Fetching fs...");
+  disp.rdis->update();
   client.printf("GET %s%s HTTP/1.1\r\n"
                 "Host: %s:%d\r\n"
                 "Cache-Control: no-cache\r\n"
@@ -2993,6 +3009,7 @@ void execOTA() {
       strncpy(fnstr, fn, 16);
       fnstr[16] = 0;
       disp.rdis->drawString(0, 2 * dispys, fnstr);
+      disp.rdis->update();
       File f = LittleFS.open(fn, FILE_WRITE);
       // read sz bytes........
       while (len > 0) {
@@ -3020,6 +3037,7 @@ void execOTA() {
   // Connection succeeded, fecthing the bin
   LOG_I(TAG, "Fetching bin update from '%s:%d' '%s' '%s'", updateHost, updatePort, updatePrefix, updateIno);
   disp.rdis->drawString(0, 3 * dispys, "Fetching update");
+  disp.rdis->update();
 
   // Get the contents of the bin file
   client.printf("GET %s%s HTTP/1.1\r\n"
@@ -3043,6 +3061,7 @@ void execOTA() {
   disp.rdis->drawString(0, 4 * dispys, "Len: ");
   String cls = String(contentLength);
   disp.rdis->drawString(5 * dispxs, 4 * dispys, cls.c_str());
+  disp.rdis->update();
 
   // check contentLength and content type
   if (contentLength && isValidContentType) {
@@ -3052,6 +3071,7 @@ void execOTA() {
     // If yes, begin
     if (canBegin) {
       disp.rdis->drawString(0, 5 * dispys, "Starting update");
+      disp.rdis->update();
       Serial.println("Begin OTA. This may take 2 - 5 mins to complete. Things might be quite for a while.. Patience!");
       // No activity would appear on the Serial monitor
       // So be patient. This may take 2 - 5mins to complete
@@ -3070,6 +3090,7 @@ void execOTA() {
         if (Update.isFinished()) {
           Serial.println("Update successfully completed. Rebooting.");
           disp.rdis->drawString(0, 7 * dispys, "Rebooting....");
+          disp.rdis->update();
           delay(1000);
           ESP.restart();
         } else {

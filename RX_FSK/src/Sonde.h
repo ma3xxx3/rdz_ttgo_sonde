@@ -382,14 +382,10 @@ public:
 	uint8_t timeoutEvent(SondeInfo *si);
 	uint8_t updateState(uint8_t event);
 
-	void updateDisplayPos();
-	void updateDisplayPos2();
-	void updateDisplayID();
 	void updateDisplayRSSI();
-	void updateDisplayRXConfig();
-	void updateStat();
 	void updateDisplayIP();
 	void updateDisplay();
+
 	void clearDisplay();
         void dispsavectlON();
         void dispsavectlOFF(int rxactive);

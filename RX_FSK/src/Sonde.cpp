@@ -246,7 +246,7 @@ void Sonde::defaultConfig() {
 					config.tft_rs = 2;
 					config.tft_cs = 0;
 					config.spectrum = -1; // no spectrum for now on large display
-					config.screenfile = 2;
+					config.screenfile = 1;
 					} else {
 					// OLED display, pins 21,22 ok...
 					config.disptype = 0;
@@ -602,6 +602,8 @@ void Sonde::receive() {
 	if (!event) event = timeoutEvent(si);
 	else sonde.dispsavectlON();
 	int action = (event==EVT_NONE) ? ACT_NONE : disp.layout->actions[event];
+	LOG_I(TAG, "event %x: action is %x\n", event, action);
+
 	//if(action!=ACT_NONE) { LOG_I(TAG, "event %x: action is %x\n", event, action); }
 	// If action is to move to a different sonde index, we do update things here, set activate
 	// to force the sx1278 task to call sonde.setup(), and pass information about sonde to
@@ -775,28 +777,8 @@ void Sonde::clearAllData(SondeInfo *si) {
 	si->d.temperature = si->d.tempRHSensor = si->d.relativeHumidity = si->d.pressure = si->d.batteryVoltage = NAN;
 }
 
-void Sonde::updateDisplayPos() {
-	disp.updateDisplayPos();
-}
-
-void Sonde::updateDisplayPos2() {
-	disp.updateDisplayPos2();
-}
-
-void Sonde::updateDisplayID() {
-	disp.updateDisplayID();
-}
-	
 void Sonde::updateDisplayRSSI() {
 	disp.updateDisplayRSSI();
-}
-
-void Sonde::updateStat() {
-	disp.updateStat();
-}
-
-void Sonde::updateDisplayRXConfig() {
-	disp.updateDisplayRXConfig();
 }
 
 void Sonde::updateDisplayIP() {
